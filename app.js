@@ -1,0 +1,13 @@
+(() => {
+ const sidebar=document.getElementById('sidebar'), overlay=document.getElementById('overlay'), toast=document.getElementById('toast'), search=document.getElementById('globalSearch'), searchBox=search.closest('.search-box'); let timer;
+ const notify=message=>{toast.textContent=message;toast.classList.add('show');clearTimeout(timer);timer=setTimeout(()=>toast.classList.remove('show'),2600)};
+ const closeSidebar=()=>{sidebar.classList.remove('open');overlay.classList.remove('show')};
+ document.getElementById('openSidebar').addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show')});document.getElementById('closeSidebar').addEventListener('click',closeSidebar);overlay.addEventListener('click',closeSidebar);
+ document.querySelectorAll('.nav-item').forEach(item=>item.addEventListener('click',e=>{e.preventDefault();document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));item.classList.add('active');document.getElementById('pageTitle').textContent=item.dataset.title;closeSidebar();if(item.dataset.title==='داشبورد')document.querySelector('.welcome-row').scrollIntoView({behavior:'smooth'});else notify(`بخش «${item.dataset.title}» در نسخه نمایشی انتخاب شد.`)}));
+ search.addEventListener('focus',()=>{if(innerWidth<=700)searchBox.classList.add('expanded')});search.addEventListener('blur',()=>{if(innerWidth<=700&&!search.value)searchBox.classList.remove('expanded')});
+ search.addEventListener('input',()=>{const term=search.value.trim().toLocaleLowerCase('fa');let visible=0;document.querySelectorAll('.activity-row').forEach(row=>{const match=!term||(row.innerText+' '+row.dataset.search).toLocaleLowerCase('fa').includes(term);row.hidden=!match;if(match)visible++});document.getElementById('emptyState').hidden=visible!==0});
+ document.getElementById('refreshButton').addEventListener('click',()=>notify('نمایش داشبورد به‌روزرسانی شد.'));document.getElementById('viewAll').addEventListener('click',()=>notify('در این نسخه، چهار فعالیت اخیر نمایش داده می‌شود.'));
+ document.querySelectorAll('.hero-link,.quick-links a,.help-card a').forEach(link=>link.addEventListener('click',e=>{e.preventDefault();notify('این پیوند در نسخه نمایشی رابط کاربری است.')}));
+ try{document.getElementById('todayDate').textContent=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date())}catch(e){}
+ document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();search.focus()}if(e.key==='Escape'){closeSidebar();search.blur()}});
+})();
