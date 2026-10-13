@@ -1,71 +1,41 @@
-(() => {
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('overlay');
-  const toast = document.getElementById('toast');
-  const search = document.getElementById('globalSearch');
-  const rows = Array.from(document.querySelectorAll('.feed-row'));
-  const emptyState = document.getElementById('emptyState');
-  let timer;
-
-  const notify = (message) => {
-    toast.textContent = message;
-    toast.classList.add('show');
-    clearTimeout(timer);
-    timer = setTimeout(() => toast.classList.remove('show'), 2600);
-  };
-
-  const closeSidebar = () => {
-    sidebar.classList.remove('open');
-    overlay.classList.remove('show');
-  };
-
-  document.getElementById('openSidebar').addEventListener('click', () => {
-    sidebar.classList.add('open');
-    overlay.classList.add('show');
-  });
-  document.getElementById('closeSidebar').addEventListener('click', closeSidebar);
-  overlay.addEventListener('click', closeSidebar);
-
-  document.querySelectorAll('.nav-item').forEach((item) => {
-    item.addEventListener('click', (e) => {
-      e.preventDefault();
-      document.querySelectorAll('.nav-item').forEach((x) => x.classList.remove('active'));
-      item.classList.add('active');
-      closeSidebar();
-      notify(`بخش «${item.dataset.title}» در نسخه نمایشی رابط کاربری است.`);
-    });
-  });
-
-  // جست‌وجو در فعالیت‌های اخیر
-  search.addEventListener('input', () => {
-    const term = search.value.trim().toLocaleLowerCase('fa');
-    let visible = 0;
-    rows.forEach((row) => {
-      const haystack = `${row.innerText} ${row.dataset.search || ''}`.toLocaleLowerCase('fa');
-      const match = !term || haystack.includes(term);
-      row.hidden = !match;
-      if (match) visible++;
-    });
-    if (emptyState) emptyState.hidden = visible !== 0;
-  });
-
-  document.getElementById('viewAll').addEventListener('click', () => notify('در این نسخه، آخرین فعالیت‌های سامانه نمایش داده می‌شود.'));
-
-  document.querySelectorAll('.qbtn, .table-link, .ghost-btn').forEach((el) => {
-    el.addEventListener('click', (e) => {
-      if (el.tagName === 'A') e.preventDefault();
-      notify('این عملیات در نسخه نمایشی رابط کاربری است.');
-    });
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-      e.preventDefault();
-      search.focus();
-    }
-    if (e.key === 'Escape') {
-      closeSidebar();
-      search.blur();
-    }
-  });
-})();
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const people=[
+{name:'محمد حسینی',role:'کارشناس شبکه',dept:'شبکه',phone:'0912 123 4567',email:'m.hosseini@airport.ir',status:'active'},
+{name:'سارا محمدی',role:'کارشناس سیستم‌ها',dept:'زیرساخت',phone:'0912 234 5678',email:'s.mohammadi@airport.ir',status:'active'},
+{name:'علی رضایی',role:'مدیر سیستم',dept:'مدیریت',phone:'0912 345 6789',email:'a.rezaei@airport.ir',status:'active'},
+{name:'ندا کریمی',role:'کارشناس نرم‌افزار',dept:'نرم‌افزار',phone:'0912 456 7890',email:'n.karimi@airport.ir',status:'active'},
+{name:'حسین احمدی',role:'کارشناس امنیت',dept:'امنیت اطلاعات',phone:'0912 567 8901',email:'h.ahmadi@airport.ir',status:'inactive'}];
+const assets=[
+{name:'Dell PowerEdge R740',type:'سرور',serial:'R740-001',location:'اتاق سرور',status:'active'},
+{name:'Cisco Catalyst 2960',type:'سوئیچ',serial:'C2960-002',location:'رک A1',status:'active'},
+{name:'HP EliteDesk 800',type:'رایانه',serial:'ED800-003',location:'دفتر IT',status:'active'},
+{name:'HP LaserJet 400',type:'چاپگر',serial:'LJ400-004',location:'طبقه همکف',status:'active'},
+{name:'APC Smart-UPS',type:'UPS',serial:'UPS-005',location:'رک A2',status:'pending'},
+{name:'MikroTik RB4011',type:'روتر',serial:'RB4011-006',location:'رک A1',status:'inactive'}];
+const titles={dashboard:['داشبورد مدیریتی','نمای کلی تجهیزات، دارایی‌ها و خدمات فناوری اطلاعات'],assets:['تجهیزات و دارایی‌ها','مدیریت تجهیزات، دارایی‌ها و وضعیت بهره‌برداری'],personnel:['پرسنل','مدیریت اطلاعات پرسنل، واحد سازمانی و اطلاعات تماس'],network:['شبکه و رک‌ها','نمای کلی رک‌ها، تجهیزات شبکه و اتصالات زیرساخت'],telecom:['تلفن و VoIP','مدیریت تلفن‌های تحت شبکه و تجهیزات ارتباطی'],systems:['نرم‌افزارها و سامانه‌ها','فهرست سامانه‌های سازمانی و وضعیت سرویس‌ها'],reports:['گزارش‌ها و آمار','گزارش‌های مدیریتی و شاخص‌های کلیدی فناوری اطلاعات'],settings:['تنظیمات','تنظیمات عمومی رابط کاربری']};
+const fa=n=>String(n).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]), st=s=>({active:'فعال',inactive:'غیرفعال',pending:'در انتظار'}[s]);
+const k=(icon,color,label,value,foot='')=>`<article class="card"><div class="symbol ${color}">${icon}</div><div><div class="label">${label}</div><div class="value">${value}</div><div class="foot">${foot}</div></div></article>`;
+const panel=(title,body)=>`<section class="panel"><h2>${title}</h2>${body}</section>`;
+const table=(heads,rows)=>`<div class="tablewrap"><table><thead><tr>${heads.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+const badge=s=>`<span class="badge ${s}">${st(s)}</span>`;
+const tool=(placeholder,extra='')=>`<div class="toolbar"><input class="field page-search" placeholder="${placeholder}">${extra}</div>`;
+const personRows=list=>list.map((p,i)=>`<tr><td>${fa(i+1)}</td><td><div class="person"><i>${p.name[0]}</i><span><b>${p.name}</b><small>${p.role}</small></span></div></td><td>${p.dept}</td><td>${p.phone}</td><td>${p.email}</td><td>${badge(p.status)}</td><td class="actions"><button data-action="view">⌕</button> <button data-action="edit">✎</button></td></tr>`).join('');
+const assetRows=list=>list.map((a,i)=>`<tr><td>${fa(i+1)}</td><td>${a.name}</td><td>${a.type}</td><td>${a.serial}</td><td>${a.location}</td><td>${badge(a.status)}</td><td class="actions"><button data-action="view">⌕</button> <button data-action="edit">✎</button></td></tr>`).join('');
+function bars(items){let max=Math.max(...items.map(x=>x[1]));return `<div class="bars">${items.map(([name,val])=>`<div class="barcol"><small>${fa(val)}</small><div class="bar" style="height:${val/max*72}%"></div><small>${name}</small></div>`).join('')}</div>`}
+function donut(){return `<div class="donutbox"><div class="donut"><b>۱٬۲۴۸</b></div><div class="legend"><div><i class="dot" style="background:var(--green)"></i>فعال <strong>۸۸٪</strong></div><div><i class="dot" style="background:var(--orange)"></i>در انتظار <strong>۷٪</strong></div><div><i class="dot" style="background:#f26472"></i>غیرفعال <strong>۵٪</strong></div></div></div>`}
+function activity(){return `<div class="activity"><div class="activityrow"><i class="acticon">▣</i><div><b>تجهیز جدید ثبت شد</b><small>سرور جدید به فهرست تجهیزات اضافه شد</small></div></div><div class="activityrow"><i class="acticon">♙</i><div><b>اطلاعات پرسنل به‌روزرسانی شد</b><small>اطلاعات واحد شبکه تغییر کرد</small></div></div><div class="activityrow"><i class="acticon">⌘</i><div><b>اتصال شبکه بررسی شد</b><small>وضعیت رک A1 تأیید شد</small></div></div></div>`}
+function dashboard(){return `<div class="grid kpis">${k('▣','blue','تجهیزات ثبت‌شده','۱٬۲۴۸','↑ ۸٪ نسبت به ماه قبل')}${k('▤','purple','دارایی‌ها','۸۹۲','↑ ۵٪ نسبت به ماه قبل')}${k('♙','green','پرسنل فعال','۱٬۱۰۳','↑ ۳٪ نسبت به ماه قبل')}${k('⌘','orange','تجهیزات شبکه','۱۴۷','↑ ۱۲٪ نسبت به ماه قبل')}</div><div class="grid two"><div class="stack">${panel('آخرین تجهیزات ثبت‌شده',table(['ردیف','نام تجهیز','نوع','مدل / سریال','مکان','وضعیت'],assetRows(assets.slice(0,4))))}${panel('فعالیت‌های اخیر',activity())}</div><div class="stack">${panel('وضعیت کلی تجهیزات',donut())}${panel('توزیع تجهیزات بر اساس نوع',bars([['سرور',285],['رایانه',240],['چاپگر',187],['سوئیچ',142],['روتر',120],['UPS',95]]))}</div></div>`}
+function assetsPage(){return `<div class="grid kpis">${k('▣','blue','کل تجهیزات','۱٬۲۴۸','دارایی‌های ثبت‌شده')}${k('✓','green','در حال استفاده','۱٬۱۰۳','۸۸٪ تجهیزات')}${k('▤','purple','دارایی‌ها','۸۹۲','ثبت‌شده در سامانه')}${k('⚠','orange','نیازمند بررسی','۱۴۷','موارد بازبینی')}</div><div class="grid two"><div class="stack">${panel('فهرست تجهیزات',tool('جست‌وجو بر اساس نام، سریال یا مکان...',`<select id="assetStatus"><option value="">همه وضعیت‌ها</option><option value="active">فعال</option><option value="inactive">غیرفعال</option><option value="pending">در انتظار</option></select><button class="primary" data-action="add-asset">＋ افزودن تجهیز</button>`)+`<div id="assetTable">${table(['ردیف','نام تجهیز','نوع','سریال','مکان','وضعیت','عملیات'],assetRows(assets))}</div>`)}${panel('آخرین تغییرات',activity())}</div><div class="stack">${panel('وضعیت تجهیزات',donut())}${panel('توزیع تجهیزات بر اساس نوع',bars([['سرور',285],['رایانه',240],['چاپگر',187],['سوئیچ',142],['روتر',120]]))}</div></div>`}
+function personnelPage(){return `<div class="grid kpis">${k('♙','blue','کل پرسنل','۱٬۲۴۸','افراد ثبت‌شده')}${k('✓','green','پرسنل فعال','۱٬۱۰۳','۸۸٪ از کل پرسنل')}${k('▦','purple','واحدهای سازمانی','۱۲','واحد ثبت‌شده')}${k('♧','orange','نیازمند بررسی','۵','پرونده ناقص')}</div><div class="grid two"><div class="stack">${panel('فهرست پرسنل',tool('جست‌وجو بر اساس نام، واحد یا شماره تماس...',`<select id="personStatus"><option value="">همه وضعیت‌ها</option><option value="active">فعال</option><option value="inactive">غیرفعال</option></select><button class="primary" data-action="add-person">＋ افزودن پرسنل</button>`)+`<div id="personTable">${table(['ردیف','نام و مشخصات','واحد سازمانی','شماره همراه','ایمیل سازمانی','وضعیت','عملیات'],personRows(people))}</div><div class="tablefoot"><span>نمایش ${fa(people.length)} مورد</span><span>۱　۲　۳　›</span></div>`)}${panel('فعالیت‌های اخیر',activity())}</div><div class="stack">${panel('پرسنل بر اساس واحد',bars([['شبکه',24],['زیرساخت',19],['نرم‌افزار',16],['پشتیبانی',12],['امنیت',8]]))}${panel('خلاصه پرسنل',`<div class="legend"><div><i class="dot" style="background:var(--green)"></i>فعال <strong>۱٬۱۰۳</strong></div><div><i class="dot" style="background:#f26472"></i>غیرفعال <strong>۱۴۵</strong></div><div><i class="dot" style="background:var(--blue)"></i>واحد سازمانی <strong>۱۲</strong></div><div><i class="dot" style="background:var(--orange)"></i>پرونده ناقص <strong>۵</strong></div></div>`)}${panel('یادداشت',`<p class="muted">این نسخه نمایشی به پایگاه داده یا سامانه احراز هویت متصل نیست. داده‌ها صرفاً نمونه هستند.</p>`)}</div></div>`}
+function network(){return `<div class="grid kpis">${k('⌘','blue','تجهیزات شبکه','۱۴۷','سوئیچ، روتر و اکسس پوینت')}${k('▤','green','رک‌های ثبت‌شده','۸','رک فعال')}${k('↔','purple','اتصالات فعال','۳۲۴','پورت متصل')}${k('⚠','orange','اتصال غیرفعال','۱۲','نیازمند بررسی')}</div><div class="grid two"><div class="stack">${panel('وضعیت رک‌ها',`<div class="rackgrid">${[['رک A1',76],['رک A2',64],['رک P0',55],['رک AFTN',82],['رک IT-01',38],['رک IT-02',48]].map(([n,v])=>`<div class="rack"><b>${n}　 ${fa(v)}٪</b><div class="progress"><span style="width:${v}%"></span></div></div>`).join('')}</div>`)}${panel('تجهیزات شبکه',table(['نام تجهیز','نوع','مکان','وضعیت'],[['Cisco Catalyst 2960','سوئیچ','رک A1','active'],['MikroTik RB4011','روتر','رک A1','active'],['Ubiquiti UAP-AC','اکسس پوینت','سالن اصلی','active'],['Fortinet FG-100E','فایروال','رک A2','pending']].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${badge(r[3])}</td></tr>`).join('')))}</div><div class="stack">${panel('خلاصه اتصالات',`<div class="grid kpis" style="grid-template-columns:1fr 1fr">${k('↔','green','اتصال فعال','۳۲۴')}${k('⚠','orange','غیرفعال','۱۲')}</div>`)}${panel('توزیع تجهیزات',bars([['سوئیچ',42],['روتر',28],['اکسس پوینت',31],['فایروال',12],['سایر',34]]))}</div></div>`}
+function telecom(){return `<div class="grid kpis">${k('☎','blue','تلفن‌های ثبت‌شده','۸۹۲','شماره داخلی و دستگاه')}${k('✓','green','فعال','۸۴۵','۹۵٪ تجهیزات')}${k('⌘','purple','دستگاه‌های VoIP','۳۲۴','تلفن تحت شبکه')}${k('⚠','orange','نیازمند بررسی','۱۲','موارد باز')}</div>${panel('فهرست تلفن و VoIP',tool('جست‌وجوی نام، داخلی یا مکان...')+table(['ردیف','کاربر / محل','شماره داخلی','نوع دستگاه','مکان','وضعیت'],[['۱','اپراتور مرکزی','۱۰۰۱','Yealink T46S','مرکز تلفن','active'],['۲','پذیرش ترمینال','۱۰۰۲','Yealink T46S','ترمینال ۱','active'],['۳','واحد شبکه','۱۰۱۵','Cisco IP Phone','دفتر IT','active'],['۴','حراست','۱۱۰۴','Cisco IP Phone','ورودی اصلی','pending']].map(r=>`<tr>${r.slice(0,5).map(x=>`<td>${x}</td>`).join('')}<td>${badge(r[5])}</td></tr>`).join('')))} `}
+function systems(){return `<div class="grid kpis">${k('▦','blue','سامانه‌های ثبت‌شده','۳۶','سامانه سازمانی')}${k('✓','green','در حال بهره‌برداری','۳۲','سرویس فعال')}${k('♧','purple','دارای مالک مشخص','۲۹','واحد مسئول ثبت شده')}${k('⚠','orange','نیازمند بازبینی','۴','بازبینی دسترسی')}</div>${panel('نرم‌افزارها و سامانه‌ها',tool('جست‌وجوی نام سامانه...')+table(['نام سامانه','واحد مسئول','مالک سامانه','نوع','وضعیت'],[['سامانه اطلاعات پرواز','فناوری اطلاعات','واحد زیرساخت','داخلی','active'],['سامانه منابع انسانی','منابع انسانی','مدیریت سیستم‌ها','سازمانی','active'],['سامانه مکاتبات','دبیرخانه','پشتیبانی نرم‌افزار','سازمانی','active'],['سامانه مدیریت دارایی','فناوری اطلاعات','واحد شبکه','داخلی','pending']].map(r=>`<tr>${r.slice(0,4).map(x=>`<td>${x}</td>`).join('')}<td>${badge(r[4])}</td></tr>`).join('')))} `}
+function reports(){return `<div class="grid kpis">${k('▣','blue','کل تجهیزات','۱٬۲۴۸')}${k('▤','purple','دارایی‌ها','۸۹۲')}${k('♙','green','پرسنل فعال','۱٬۱۰۳')}${k('⌘','orange','تجهیزات شبکه','۱۴۷')}</div><div class="grid two"><div class="stack">${panel('وضعیت دارایی‌ها',donut())}${panel('دارایی‌ها بر اساس محل',bars([['ترمینال ۱',342],['ترمینال ۲',287],['اداری',198],['رک‌ها',152],['سایر',76]]))}</div><div class="stack">${panel('توزیع تجهیزات بر اساس نوع',bars([['سرور',285],['رایانه',240],['چاپگر',187],['سوئیچ',142],['روتر',120]]))}${panel('شاخص‌های کلیدی',`<div class="legend"><div><i class="dot" style="background:var(--green)"></i>تجهیزات فعال <strong>۸۸٪</strong></div><div><i class="dot" style="background:var(--orange)"></i>در انتظار بررسی <strong>۷٪</strong></div><div><i class="dot" style="background:#f26472"></i>غیرفعال <strong>۵٪</strong></div></div><button class="primary" data-action="export">⇩ دریافت گزارش CSV</button>`)}</div></div>`}
+function settings(){return panel('ترجیحات رابط کاربری',`<div class="settingsrow"><div><b>اعلان‌های رابط کاربری</b><small>نمایش پیام‌های موفقیت و هشدار</small></div><button class="switch on"></button></div><div class="settingsrow"><div><b>حالت راست‌به‌چپ</b><small>چیدمان مناسب زبان فارسی</small></div><button class="switch on"></button></div><div class="settingsrow"><div><b>نمایش تاریخ شمسی</b><small>استفاده از تاریخ فارسی در رابط</small></div><button class="switch on"></button></div><p class="muted">این بسته فقط فرانت‌اند است و به پایگاه داده متصل نیست.</p>`)}
+const renderers={dashboard,assets:assetsPage,personnel:personnelPage,network,telecom,systems,reports,settings};
+function toast(t){let el=$('#toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2600)}
+function render(page){const [title,sub]=titles[page];$('#title').textContent=title;$('#crumb').textContent=title;$('#subtitle').textContent=sub;$('#content').innerHTML=renderers[page]();$$('.nav').forEach(b=>b.classList.toggle('active',b.dataset.page===page));$('#add').style.display=['dashboard','reports','settings'].includes(page)?'none':'inline-block';$('#add').textContent=page==='personnel'?'＋ افزودن پرسنل':page==='assets'?'＋ افزودن تجهیز':'＋ افزودن مورد';}
+document.addEventListener('click',e=>{let n=e.target.closest('[data-page]');if(n){render(n.dataset.page);$('#sidebar').classList.remove('open')}let a=e.target.closest('[data-action]');if(a){if(a.dataset.action==='export'){let rows=people.map(p=>[p.name,p.role,p.dept,p.phone,p.email,st(p.status)]);let blob=new Blob(['\ufeffنام,سمت,واحد,تلفن,ایمیل,وضعیت\r\n'+rows.map(r=>r.join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});let link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='personnel.csv';link.click();return}toast('این قابلیت نمایشی است و هنوز به بک‌اند متصل نیست.')}if(e.target.matches('.switch'))e.target.classList.toggle('on')});
+document.addEventListener('input',e=>{if(e.target.matches('.page-search')){let q=e.target.value.toLowerCase();if($('#personTable'))$('#personTable').innerHTML=table(['ردیف','نام و مشخصات','واحد سازمانی','شماره همراه','ایمیل سازمانی','وضعیت','عملیات'],personRows(people.filter(p=>Object.values(p).some(v=>v.toLowerCase().includes(q)))));if($('#assetTable'))$('#assetTable').innerHTML=table(['ردیف','نام تجهیز','نوع','سریال','مکان','وضعیت','عملیات'],assetRows(assets.filter(a=>Object.values(a).some(v=>v.toLowerCase().includes(q)))));}});
+document.addEventListener('change',e=>{if(e.target.id==='personStatus')$('#personTable').innerHTML=table(['ردیف','نام و مشخصات','واحد سازمانی','شماره همراه','ایمیل سازمانی','وضعیت','عملیات'],personRows(people.filter(p=>!e.target.value||p.status===e.target.value)));if(e.target.id==='assetStatus')$('#assetTable').innerHTML=table(['ردیف','نام تجهیز','نوع','سریال','مکان','وضعیت','عملیات'],assetRows(assets.filter(a=>!e.target.value||a.status===e.target.value)))});
+$('#menu').addEventListener('click',()=>$('#sidebar').classList.toggle('open'));$('#add').addEventListener('click',()=>toast('فرم افزودن در نسخه نمایشی آماده اتصال به بک‌اند است.'));$('#globalSearch').addEventListener('input',e=>{let input=$('.page-search');if(input){input.value=e.target.value;input.dispatchEvent(new Event('input'))}});$('#date').textContent=new Intl.DateTimeFormat('fa-IR',{dateStyle:'medium'}).format(new Date());render('dashboard');
